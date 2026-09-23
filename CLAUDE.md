@@ -47,7 +47,7 @@ Users photograph a recipe, **usually a printed cookbook page**, and the app fill
 4. A server route sends the images to Claude with a structured-output schema (title, description, servings, total_time, ingredients[], steps[]).
 5. The result pre-fills the normal recipe form. **The user always reviews and edits before saving**. Never auto-save extracted recipes.
 
-- Model: **`claude-sonnet-5`**. Upgrade to `claude-opus-5` only if accuracy on real cookbook photos proves insufficient.
+- Model: **`claude-opus-5`**. `claude-sonnet-5` misread words and quantities on real cookbook photos.
 - The API key lives in server env vars only, never in client code.
 - Extraction requires a signed-in user and has a per-user daily limit (start at 20).
 

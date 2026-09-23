@@ -1,13 +1,15 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { ExtractedRecipe } from "@/lib/recipe-schema";
 import { createClient } from "@/lib/supabase/server";
 
-export const maxDuration = 60;
+// Opus thinks before answering, so a multi-page recipe can take over a minute.
+export const maxDuration = 120;
 
-const MODEL = "claude-sonnet-5";
+// Sonnet 5 misread small print on real cookbook pages.
+const MODEL = "claude-opus-5";
 const BUCKET = "recipe-photos";
 
 const Body = z.object({ paths: z.array(z.string()).min(1).max(3) });
@@ -47,7 +49,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const images: Anthropic.ImageBlockParam[] = [];
+  const images: Anthropic.Beta.BetaImageBlockParam[] = [];
   for (const path of paths) {
     const { data: file, error } = await supabase.storage.from(BUCKET).download(path);
     if (error || !file) {
@@ -67,11 +69,14 @@ export async function POST(request: NextRequest) {
   const started = Date.now();
 
   try {
-    const response = await client.messages.parse({
+    const response = await client.beta.messages.parse({
       model: MODEL,
       max_tokens: 16000,
+      // If a safety classifier wrongly declines a page, the API retries on a fallback model.
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
       messages: [{ role: "user", content: [...images, { type: "text", text: PROMPT }] }],
-      output_config: { format: zodOutputFormat(ExtractedRecipe) },
+      output_config: { format: betaZodOutputFormat(ExtractedRecipe) },
     });
 
     if (response.stop_reason === "refusal" || !response.parsed_output) {
@@ -83,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       recipe: response.parsed_output,
-      meta: { model: MODEL, ms: Date.now() - started, usage: response.usage },
+      meta: { model: response.model, ms: Date.now() - started, usage: response.usage },
     });
   } catch (err) {
     if (err instanceof Anthropic.RateLimitError) {
