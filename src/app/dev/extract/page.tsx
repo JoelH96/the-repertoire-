@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { resizeToJpeg } from "@/lib/resize-image";
-import { createClient } from "@/lib/supabase/client";
+import { uploadRecipePhotos } from "@/lib/photo-import";
 
 // Throwaway page for validating extraction on real cookbook photos.
 // Replaced by the real add-recipe flow once extraction is proven.
@@ -16,22 +15,7 @@ export default function ExtractTestPage() {
     setBusy(true);
     setResult(null);
     try {
-      const supabase = createClient();
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) throw new Error("Not signed in");
-
-      const paths: string[] = [];
-      for (const [i, file] of files.entries()) {
-        setStatus(`Resizing photo ${i + 1} of ${files.length}…`);
-        const jpeg = await resizeToJpeg(file);
-        setStatus(`Uploading photo ${i + 1} (${Math.round(jpeg.size / 1024)} KB)…`);
-        const path = `${data.user.id}/${crypto.randomUUID()}.jpg`;
-        const { error } = await supabase.storage
-          .from("recipe-photos")
-          .upload(path, jpeg, { contentType: "image/jpeg" });
-        if (error) throw new Error(`Upload failed: ${error.message}`);
-        paths.push(path);
-      }
+      const paths = await uploadRecipePhotos(files, setStatus);
 
       setStatus("Reading recipe…");
       const res = await fetch("/api/extract", {
