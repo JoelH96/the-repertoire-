@@ -16,17 +16,21 @@
 - **Supabase**: Postgres, Auth (magic link / Google), Storage (recipe photos), Row-Level Security for all access rules
 - **Anthropic API** (`@anthropic-ai/sdk`), server-side only, for photo → recipe extraction
 - **Vercel** for hosting; deploys on push to `main`
+- Next.js 16: route protection lives in `src/proxy.ts` (the renamed `middleware`). Check `node_modules/next/dist/docs/` before relying on older Next.js patterns.
 
 ## Data model
 
 ```
-profiles(id, display_name, avatar_url)
+profiles(id, display_name, avatar_url)          -- added in milestone 3; until then author_id references auth.users
 recipes(id, author_id, title, description, servings text, total_time text,
         ingredients text[], steps text[], source_url, source_photos text[], created_at)
 groups(id, name, invite_code)
 group_members(group_id, user_id)
 saves(user_id, recipe_id)
+extraction_usage(user_id, day, count)           -- photo import daily limit, via claim_extraction()
 ```
+
+Schema changes go in `supabase/migrations/` as numbered SQL files.
 
 Ingredients and steps are plain text lines. Do not parse them into structured quantities.
 
