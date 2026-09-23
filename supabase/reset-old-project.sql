@@ -1,6 +1,8 @@
 -- One-off: removes the tables left over from the previous attempt at this app.
 -- Run once in the Supabase SQL editor BEFORE applying migrations/0001_init.sql.
 -- This permanently deletes the data in these tables.
+-- It leaves the old app's triggers on auth.users and storage.objects behind;
+-- migrations/0002_drop_old_app_triggers.sql removes them.
 
 drop table if exists public.comments cascade;
 drop table if exists public.favorites cascade;
