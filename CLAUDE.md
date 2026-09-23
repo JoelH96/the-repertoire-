@@ -5,6 +5,7 @@
 ## Principles
 
 - **Ship small.** One milestone per session / PR. Each milestone is deployed and usable before the next starts.
+- **Descriptive branch names.** Name branches after the milestone or feature (e.g. `milestone-2-url-import`, `fix-login-redirect`). If a session assigns a random branch name, work on a descriptive one instead.
 - **The risk is content, not code.** If adding a recipe is tedious, nobody will. Every decision favours making recipe entry effortless.
 - **Useful solo first.** The app must be worth using with zero friends on it.
 - **Out of scope until real users ask:** comments, notifications, feed ranking, ratings, meal plans, shopping lists, structured ingredient parsing (quantities/units), advanced search, native apps.
