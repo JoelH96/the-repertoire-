@@ -15,6 +15,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "The Repertoire",
   description: "Your cookbook, shared with friends.",
+  // Opened from the iPhone home screen, run full-screen without Safari's toolbar.
+  appleWebApp: { capable: true, title: "Repertoire", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

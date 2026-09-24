@@ -15,5 +15,3 @@ A social recipe-sharing web app. See `CLAUDE.md` for the product plan.
 2. **Env vars:** copy `.env.example` to `.env.local` and fill it in. In Vercel, set the
    same variables; mark `ANTHROPIC_API_KEY` as Sensitive.
 3. `npm install && npm run dev`
-
-`/dev/extract` is a throwaway page for testing photo → recipe extraction.
