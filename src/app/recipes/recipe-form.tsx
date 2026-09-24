@@ -44,7 +44,9 @@ export function RecipeForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      <input type="hidden" name="source_photos" value={sourcePhotos.join("\n")} />
+      {sourcePhotos.map((path) => (
+        <input key={path} type="hidden" name="source_photos" value={path} />
+      ))}
 
       <Field label="Title" htmlFor="title">
         <Input id="title" name="title" required defaultValue={initial.title} className={`h-10 ${text}`} />

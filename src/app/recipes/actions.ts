@@ -9,7 +9,7 @@ export type SaveState = { error: string } | null;
 // Ingredients and steps are edited as one line each; blank lines are dropped.
 const lines = z.string().transform((s) =>
   s
-    .split("\n")
+    .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean),
 );
@@ -21,10 +21,8 @@ const RecipeFields = z.object({
   total_time: z.string().trim().max(100),
   ingredients: lines,
   steps: lines,
-  source_photos: z
-    .string()
-    .transform((s) => (s ? s.split("\n") : []))
-    .pipe(z.array(z.string()).max(3)),
+  // One form field per photo: browsers send newlines as \r\n, so joined paths break.
+  source_photos: z.array(z.string()).max(3),
 });
 
 function parse(formData: FormData) {
@@ -36,7 +34,7 @@ function parse(formData: FormData) {
     total_time: field("total_time"),
     ingredients: field("ingredients"),
     steps: field("steps"),
-    source_photos: field("source_photos"),
+    source_photos: formData.getAll("source_photos").map(String),
   });
 }
 
