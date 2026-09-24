@@ -58,3 +58,4 @@ Users photograph a recipe, **usually a printed cookbook page**, and the app fill
 3. **Groups.** Create a group, share an invite link, see a feed of group members' recipes.
 4. **Save.** "Save to my cookbook"; the cookbook shows your own recipes plus saved ones.
 5. **Real users.** 5–10 friends. Success metric: each adds 3+ recipes in their first week.
+   - Before inviting anyone: sign-in emails go through Resend (Supabase custom SMTP) from the test sender `onboarding@resend.dev`, which only delivers to the Resend account owner. Verify our own domain in Resend and switch the sender to it.
