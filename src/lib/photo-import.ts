@@ -1,9 +1,9 @@
+import { PHOTO_BUCKET } from "@/lib/photos";
 import { resizeToJpeg } from "@/lib/resize-image";
 import type { ExtractedRecipe } from "@/lib/recipe-schema";
 import { createClient } from "@/lib/supabase/client";
 
-export const PHOTO_BUCKET = "recipe-photos";
-export const MAX_PHOTOS = 3;
+export { MAX_PHOTOS } from "@/lib/photos";
 
 // Resizes each photo to JPEG and uploads it to the user's folder. Returns the storage paths.
 export async function uploadRecipePhotos(

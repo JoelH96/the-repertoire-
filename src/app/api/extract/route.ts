@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
+import { PHOTO_BUCKET } from "@/lib/photos";
 import { ExtractedRecipe } from "@/lib/recipe-schema";
 import { createClient } from "@/lib/supabase/server";
 
@@ -10,7 +11,6 @@ export const maxDuration = 120;
 
 // Sonnet 5 misread small print on real cookbook pages.
 const MODEL = "claude-opus-5";
-const BUCKET = "recipe-photos";
 
 const Body = z.object({ paths: z.array(z.string()).min(1).max(3) });
 
@@ -19,6 +19,7 @@ const PROMPT = `These photos show one recipe, usually a printed cookbook page. I
 Transcribe the recipe faithfully:
 - Keep ingredient lines exactly as printed, one per line, with quantities and notes. If ingredients are grouped under subheadings (e.g. "For the sauce"), include the subheading as its own line.
 - Split the method into its printed steps, in order, without adding step numbers.
+- For the source, use a book title or author only if it is printed on the page, such as in a running header.
 - Do not invent, convert or "improve" anything. Leave a field as an empty string if it isn't on the page.
 - Ignore other recipes, page numbers and captions that aren't part of this recipe.`;
 
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
 
   const images: Anthropic.Beta.BetaImageBlockParam[] = [];
   for (const path of paths) {
-    const { data: file, error } = await supabase.storage.from(BUCKET).download(path);
+    const { data: file, error } = await supabase.storage.from(PHOTO_BUCKET).download(path);
     if (error || !file) {
       return NextResponse.json({ error: `Couldn't read photo ${path}` }, { status: 400 });
     }

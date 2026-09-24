@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { PHOTO_BUCKET } from "@/lib/photos";
 import { createClient } from "@/lib/supabase/server";
 
 export type SaveState = { error: string } | null;
@@ -19,6 +20,7 @@ const RecipeFields = z.object({
   description: z.string().trim().max(5000),
   servings: z.string().trim().max(100),
   total_time: z.string().trim().max(100),
+  source: z.string().trim().max(200),
   ingredients: lines,
   steps: lines,
   // One form field per photo: browsers send newlines as \r\n, so joined paths break.
@@ -32,6 +34,7 @@ function parse(formData: FormData) {
     description: field("description"),
     servings: field("servings"),
     total_time: field("total_time"),
+    source: field("source"),
     ingredients: field("ingredients"),
     steps: field("steps"),
     source_photos: formData.getAll("source_photos").map(String),
@@ -68,12 +71,12 @@ export async function updateRecipe(
   const parsed = parse(formData);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   // Photos are fixed once a recipe is saved, so source_photos isn't updated.
-  const { title, description, servings, total_time, ingredients, steps } = parsed.data;
+  const { title, description, servings, total_time, source, ingredients, steps } = parsed.data;
 
   // RLS only lets authors update their own recipes; a miss comes back as no row.
   const { data, error } = await supabase
     .from("recipes")
-    .update({ title, description, servings, total_time, ingredients, steps })
+    .update({ title, description, servings, total_time, source, ingredients, steps })
     .eq("id", id)
     .select("id")
     .maybeSingle();
@@ -81,4 +84,27 @@ export async function updateRecipe(
   if (!data) return { error: "Recipe not found" };
 
   redirect(`/recipes/${id}`);
+}
+
+export async function deleteRecipe(id: string): Promise<SaveState> {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return { error: "You're signed out. Sign in again to delete." };
+
+  // RLS only lets authors delete their own recipes; a miss comes back as no row.
+  const { data, error } = await supabase
+    .from("recipes")
+    .delete()
+    .eq("id", id)
+    .select("source_photos")
+    .maybeSingle();
+  if (error) return { error: `Couldn't delete: ${error.message}` };
+  if (!data) return { error: "Recipe not found" };
+
+  // Best effort: the recipe is already gone, so a leftover photo is harmless.
+  if (data.source_photos.length) {
+    await supabase.storage.from(PHOTO_BUCKET).remove(data.source_photos);
+  }
+
+  redirect("/");
 }

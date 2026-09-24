@@ -24,7 +24,8 @@
 ```
 profiles(id, display_name, avatar_url)          -- added in milestone 3; until then author_id references auth.users
 recipes(id, author_id, title, description, servings text, total_time text,
-        ingredients text[], steps text[], source_url, source_photos text[], created_at)
+        ingredients text[], steps text[], source text, source_url, source_photos text[], created_at)
+                                                -- source: free-text credit, e.g. "Jamie Oliver, 5 Ingredients"
 groups(id, name, invite_code)
 group_members(group_id, user_id)
 saves(user_id, recipe_id)

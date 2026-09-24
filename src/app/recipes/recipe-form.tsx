@@ -15,6 +15,7 @@ export const EMPTY_DRAFT: RecipeDraft = {
   description: "",
   servings: "",
   total_time: "",
+  source: "",
   ingredients: [],
   steps: [],
 };
@@ -50,6 +51,16 @@ export function RecipeForm({
 
       <Field label="Title" htmlFor="title">
         <Input id="title" name="title" required defaultValue={initial.title} className={`h-10 ${text}`} />
+      </Field>
+
+      <Field label="Source" htmlFor="source">
+        <Input
+          id="source"
+          name="source"
+          placeholder="e.g. Jamie Oliver, 5 Ingredients"
+          defaultValue={initial.source}
+          className={`h-10 ${text}`}
+        />
       </Field>
 
       <Field label="Description" htmlFor="description">

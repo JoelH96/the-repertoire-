@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { PHOTO_BUCKET } from "@/lib/photo-import";
+import { PHOTO_BUCKET } from "@/lib/photos";
 import { createClient } from "@/lib/supabase/server";
 import { getRecipe } from "../data";
 import { PageHeader } from "../page-header";
@@ -31,8 +31,9 @@ export default async function RecipePage({ params }: PageProps<"/recipes/[id]">)
         )}
       </PageHeader>
 
-      {(meta || recipe.description) && (
+      {(recipe.source || meta || recipe.description) && (
         <div className="flex flex-col gap-2">
+          {recipe.source && <p className="text-sm">From {recipe.source}</p>}
           {meta && <p className="text-sm text-muted-foreground">{meta}</p>}
           {recipe.description && <p className="whitespace-pre-line">{recipe.description}</p>}
         </div>

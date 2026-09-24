@@ -4,6 +4,7 @@ import { updateRecipe } from "../../actions";
 import { getRecipe } from "../../data";
 import { PageHeader } from "../../page-header";
 import { RecipeForm } from "../../recipe-form";
+import { DeleteRecipeButton } from "./delete-button";
 
 export default async function EditRecipePage({ params }: PageProps<"/recipes/[id]/edit">) {
   const { id } = await params;
@@ -22,12 +23,14 @@ export default async function EditRecipePage({ params }: PageProps<"/recipes/[id
           description: recipe.description ?? "",
           servings: recipe.servings ?? "",
           total_time: recipe.total_time ?? "",
+          source: recipe.source ?? "",
           ingredients: recipe.ingredients,
           steps: recipe.steps,
         }}
         action={updateRecipe.bind(null, id)}
         submitLabel="Save changes"
       />
+      <DeleteRecipeButton id={id} title={recipe.title} />
     </main>
   );
 }

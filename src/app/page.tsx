@@ -8,7 +8,7 @@ export default async function HomePage() {
   const { data: auth } = await supabase.auth.getUser();
   const { data: recipes, error } = await supabase
     .from("recipes")
-    .select("id, title, servings, total_time")
+    .select("id, title, source, servings, total_time")
     .eq("author_id", auth.user!.id)
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -36,9 +36,9 @@ export default async function HomePage() {
             <li key={recipe.id}>
               <Link href={`/recipes/${recipe.id}`} className="flex flex-col gap-0.5 px-4 py-3">
                 <span className="font-medium">{recipe.title}</span>
-                {(recipe.servings || recipe.total_time) && (
+                {(recipe.source || recipe.servings || recipe.total_time) && (
                   <span className="text-sm text-muted-foreground">
-                    {[recipe.servings, recipe.total_time].filter(Boolean).join(" · ")}
+                    {[recipe.source, recipe.servings, recipe.total_time].filter(Boolean).join(" · ")}
                   </span>
                 )}
               </Link>

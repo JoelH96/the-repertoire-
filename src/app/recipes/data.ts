@@ -11,6 +11,7 @@ export type Recipe = {
   description: string | null;
   servings: string | null;
   total_time: string | null;
+  source: string | null;
   ingredients: string[];
   steps: string[];
   source_url: string | null;

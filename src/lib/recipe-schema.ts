@@ -12,6 +12,11 @@ export const ExtractedRecipe = z.object({
     .array(z.string())
     .describe("One ingredient per line, exactly as printed, including quantity and any notes"),
   steps: z.array(z.string()).describe("One method step per entry, in order, without step numbers"),
+  source: z
+    .string()
+    .describe(
+      "Book title and/or author, only if printed on the page (e.g. in a running header); empty string otherwise, never guessed",
+    ),
 });
 
 export type ExtractedRecipe = z.infer<typeof ExtractedRecipe>;
