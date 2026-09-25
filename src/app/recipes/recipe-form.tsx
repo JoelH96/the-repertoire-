@@ -25,11 +25,13 @@ const text = "text-base"; // 16px+ stops iOS zooming into fields
 export function RecipeForm({
   initial,
   sourcePhotos = [],
+  sourceUrl,
   action,
   submitLabel,
 }: {
   initial: RecipeDraft;
   sourcePhotos?: string[];
+  sourceUrl?: string;
   action: (prev: SaveState, formData: FormData) => Promise<SaveState>;
   submitLabel: string;
 }) {
@@ -48,6 +50,7 @@ export function RecipeForm({
       {sourcePhotos.map((path) => (
         <input key={path} type="hidden" name="source_photos" value={path} />
       ))}
+      {sourceUrl && <input type="hidden" name="source_url" value={sourceUrl} />}
 
       <Field label="Title" htmlFor="title">
         <Input id="title" name="title" required defaultValue={initial.title} className={`h-10 ${text}`} />

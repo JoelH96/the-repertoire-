@@ -31,9 +31,18 @@ export default async function RecipePage({ params }: PageProps<"/recipes/[id]">)
         )}
       </PageHeader>
 
-      {(recipe.source || meta || recipe.description) && (
+      {(recipe.source || recipe.source_url || meta || recipe.description) && (
         <div className="flex flex-col gap-2">
-          {recipe.source && <p className="text-sm">From {recipe.source}</p>}
+          {recipe.source_url ? (
+            <p className="text-sm">
+              From{" "}
+              <a href={recipe.source_url} target="_blank" rel="noreferrer" className="underline">
+                {recipe.source || new URL(recipe.source_url).hostname.replace(/^www\./, "")}
+              </a>
+            </p>
+          ) : (
+            recipe.source && <p className="text-sm">From {recipe.source}</p>
+          )}
           {meta && <p className="text-sm text-muted-foreground">{meta}</p>}
           {recipe.description && <p className="whitespace-pre-line">{recipe.description}</p>}
         </div>

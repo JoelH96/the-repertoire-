@@ -42,3 +42,19 @@ export async function extractRecipe(paths: string[]): Promise<ExtractedRecipe> {
   }
   return body.recipe;
 }
+
+// Asks the server to read the recipe from a web page or YouTube video.
+export async function importRecipeFromUrl(
+  url: string,
+): Promise<{ recipe: ExtractedRecipe; source_url: string }> {
+  const res = await fetch("/api/import-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+  const body = await res.json().catch(() => null);
+  if (!res.ok || !body?.recipe) {
+    throw new Error(body?.error ?? `Couldn't import that link (error ${res.status})`);
+  }
+  return body;
+}

@@ -55,7 +55,7 @@ Users photograph a recipe, **usually a printed cookbook page**, and the app fill
 ## Milestones
 
 1. **Personal cookbook + photo import.** Sign in, add a recipe by photo or by hand, review/edit, view your cookbook. Start with a throwaway page that uploads a photo and shows the extracted JSON, to validate extraction on real cookbook pages before building screens.
-2. **URL import.** Paste a recipe URL and parse its schema.org `Recipe` JSON-LD into the form.
+2. **URL import.** Paste a recipe URL and parse its schema.org `Recipe` JSON-LD into the form. YouTube links: Claude reads the recipe from the video description (counts towards the daily extraction limit); if it isn't there, try JSON-LD on the description's links.
 3. **Groups.** Create a group, share an invite link, see a feed of group members' recipes.
 4. **Save.** "Save to my cookbook"; the cookbook shows your own recipes plus saved ones.
 5. **Real users.** 5–10 friends. Success metric: each adds 3+ recipes in their first week.

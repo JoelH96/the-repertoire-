@@ -1,9 +1,15 @@
 "use client";
 
-import { Camera, ImagePlus, X } from "lucide-react";
+import { Camera, ImagePlus, Link2, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { extractRecipe, MAX_PHOTOS, uploadRecipePhotos } from "@/lib/photo-import";
+import { Input } from "@/components/ui/input";
+import {
+  extractRecipe,
+  importRecipeFromUrl,
+  MAX_PHOTOS,
+  uploadRecipePhotos,
+} from "@/lib/photo-import";
 import { createRecipe } from "../actions";
 import { EMPTY_DRAFT, RecipeForm, type RecipeDraft } from "../recipe-form";
 
@@ -13,11 +19,12 @@ type Step =
   | { kind: "pick" }
   | { kind: "reading"; status: string }
   | { kind: "failed"; error: string; paths: string[] }
-  | { kind: "review"; draft: RecipeDraft; paths: string[]; fromPhotos: boolean };
+  | { kind: "review"; draft: RecipeDraft; paths: string[]; fromPhotos: boolean; sourceUrl?: string };
 
 export function NewRecipe() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [step, setStep] = useState<Step>({ kind: "pick" });
+  const [link, setLink] = useState("");
   const cameraInput = useRef<HTMLInputElement>(null);
   const libraryInput = useRef<HTMLInputElement>(null);
 
@@ -50,6 +57,17 @@ export function NewRecipe() {
     }
   }
 
+  async function importLink(e: React.FormEvent) {
+    e.preventDefault();
+    setStep({ kind: "reading", status: "Fetching the recipe…" });
+    try {
+      const { recipe, source_url } = await importRecipeFromUrl(link);
+      setStep({ kind: "review", draft: recipe, paths: [], fromPhotos: false, sourceUrl: source_url });
+    } catch (err) {
+      setStep({ kind: "failed", error: err instanceof Error ? err.message : String(err), paths: [] });
+    }
+  }
+
   if (step.kind === "review") {
     return (
       <div className="flex flex-col gap-5">
@@ -61,9 +79,19 @@ export function NewRecipe() {
             </p>
           </>
         )}
+        {step.sourceUrl && (
+          <p className="rounded-lg bg-muted px-3 py-2 text-sm">
+            Imported from{" "}
+            <a href={step.sourceUrl} target="_blank" rel="noreferrer" className="underline">
+              {new URL(step.sourceUrl).hostname.replace(/^www\./, "")}
+            </a>
+            . Check it over before saving.
+          </p>
+        )}
         <RecipeForm
           initial={step.draft}
           sourcePhotos={step.paths}
+          sourceUrl={step.sourceUrl}
           action={createRecipe}
           submitLabel="Save to my cookbook"
         />
@@ -77,8 +105,8 @@ export function NewRecipe() {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-muted-foreground">
-        Photograph the recipe, one photo per page (up to {MAX_PHOTOS}), and we&apos;ll fill in the
-        details for you to check.
+        Photograph the recipe, one photo per page (up to {MAX_PHOTOS}), or paste a link to a recipe
+        website or YouTube video. We&apos;ll fill in the details for you to check.
       </p>
 
       {photos.length > 0 && <Thumbnails photos={photos} onRemove={reading ? undefined : removePhoto} />}
@@ -132,6 +160,24 @@ export function NewRecipe() {
           {reading ? "Reading…" : `Read recipe from ${photos.length} photo${photos.length > 1 ? "s" : ""}`}
         </Button>
       )}
+
+      <form onSubmit={importLink} className="flex gap-2">
+        <Input
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          required
+          placeholder="Paste a recipe or YouTube link"
+          aria-label="Recipe link"
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          disabled={reading}
+          className="h-11 text-base"
+        />
+        <Button type="submit" variant="outline" size="lg" className="h-11 text-base" disabled={reading}>
+          <Link2 /> Import
+        </Button>
+      </form>
 
       {reading && <p className="text-sm text-muted-foreground" aria-live="polite">{step.status}</p>}
 

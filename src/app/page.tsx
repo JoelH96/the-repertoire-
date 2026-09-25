@@ -28,7 +28,7 @@ export default async function HomePage() {
 
       {recipes.length === 0 ? (
         <p className="text-center text-muted-foreground">
-          No recipes yet. Photograph a page from a cookbook to add your first.
+          No recipes yet. Photograph a cookbook page or paste a link to add your first.
         </p>
       ) : (
         <ul className="flex flex-col divide-y rounded-lg border">
