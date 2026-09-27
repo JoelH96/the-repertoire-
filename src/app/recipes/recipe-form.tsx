@@ -50,7 +50,6 @@ export function RecipeForm({
       {sourcePhotos.map((path) => (
         <input key={path} type="hidden" name="source_photos" value={path} />
       ))}
-      {sourceUrl && <input type="hidden" name="source_url" value={sourceUrl} />}
 
       <Field label="Title" htmlFor="title">
         <Input id="title" name="title" required defaultValue={initial.title} className={`h-10 ${text}`} />
@@ -62,6 +61,18 @@ export function RecipeForm({
           name="source"
           placeholder="e.g. Jamie Oliver, 5 Ingredients"
           defaultValue={initial.source}
+          className={`h-10 ${text}`}
+        />
+      </Field>
+
+      <Field label="Link" hint="optional" htmlFor="source_url">
+        <Input
+          id="source_url"
+          name="source_url"
+          type="url"
+          inputMode="url"
+          placeholder="https://"
+          defaultValue={sourceUrl}
           className={`h-10 ${text}`}
         />
       </Field>
