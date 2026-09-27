@@ -1,16 +1,13 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
+import type Anthropic from "@anthropic-ai/sdk";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
+import { extract, ExtractionError } from "@/lib/claude";
 import { PHOTO_BUCKET } from "@/lib/photos";
 import { ExtractedRecipe } from "@/lib/recipe-schema";
 import { createClient } from "@/lib/supabase/server";
 
 // Opus thinks before answering, so a multi-page recipe can take over a minute.
 export const maxDuration = 120;
-
-// Sonnet 5 misread small print on real cookbook pages.
-const MODEL = "claude-opus-5";
 
 const Body = z.object({ paths: z.array(z.string()).min(1).max(3) });
 
@@ -66,37 +63,13 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const client = new Anthropic();
-  const started = Date.now();
-
   try {
-    const response = await client.beta.messages.parse({
-      model: MODEL,
-      max_tokens: 16000,
-      // If a safety classifier wrongly declines a page, the API retries on a fallback model.
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      messages: [{ role: "user", content: [...images, { type: "text", text: PROMPT }] }],
-      output_config: { format: betaZodOutputFormat(ExtractedRecipe) },
-    });
-
-    if (response.stop_reason === "refusal" || !response.parsed_output) {
-      return NextResponse.json(
-        { error: "Couldn't read a recipe from these photos", stop_reason: response.stop_reason },
-        { status: 422 },
-      );
-    }
-
-    return NextResponse.json({
-      recipe: response.parsed_output,
-      meta: { model: response.model, ms: Date.now() - started, usage: response.usage },
-    });
+    const recipe = await extract([...images, { type: "text", text: PROMPT }], ExtractedRecipe);
+    return NextResponse.json({ recipe });
   } catch (err) {
-    if (err instanceof Anthropic.RateLimitError) {
-      return NextResponse.json({ error: "Extraction is busy, try again shortly" }, { status: 503 });
-    }
-    if (err instanceof Anthropic.APIError) {
-      return NextResponse.json({ error: `Extraction failed: ${err.message}` }, { status: 502 });
+    if (err instanceof ExtractionError) {
+      const error = err.status === 422 ? "Couldn't read a recipe from these photos" : err.message;
+      return NextResponse.json({ error }, { status: err.status });
     }
     throw err;
   }

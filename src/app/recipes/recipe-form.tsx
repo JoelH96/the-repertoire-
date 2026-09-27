@@ -25,11 +25,13 @@ const text = "text-base"; // 16px+ stops iOS zooming into fields
 export function RecipeForm({
   initial,
   sourcePhotos = [],
+  sourceUrl,
   action,
   submitLabel,
 }: {
   initial: RecipeDraft;
   sourcePhotos?: string[];
+  sourceUrl?: string;
   action: (prev: SaveState, formData: FormData) => Promise<SaveState>;
   submitLabel: string;
 }) {
@@ -59,6 +61,18 @@ export function RecipeForm({
           name="source"
           placeholder="e.g. Jamie Oliver, 5 Ingredients"
           defaultValue={initial.source}
+          className={`h-10 ${text}`}
+        />
+      </Field>
+
+      <Field label="Link" hint="optional" htmlFor="source_url">
+        <Input
+          id="source_url"
+          name="source_url"
+          type="url"
+          inputMode="url"
+          placeholder="https://"
+          defaultValue={sourceUrl}
           className={`h-10 ${text}`}
         />
       </Field>
