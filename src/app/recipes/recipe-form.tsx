@@ -26,12 +26,14 @@ export function RecipeForm({
   initial,
   sourcePhotos = [],
   sourceUrl,
+  notes,
   action,
   submitLabel,
 }: {
   initial: RecipeDraft;
   sourcePhotos?: string[];
   sourceUrl?: string;
+  notes?: string;
   action: (prev: SaveState, formData: FormData) => Promise<SaveState>;
   submitLabel: string;
 }) {
@@ -114,6 +116,17 @@ export function RecipeForm({
 
       <Field label="Method" hint="one step per line" htmlFor="steps">
         <Textarea id="steps" name="steps" rows={6} defaultValue={initial.steps.join("\n")} className={text} />
+      </Field>
+
+      <Field label="Chef's notes" hint="just for you" htmlFor="notes">
+        <Textarea
+          id="notes"
+          name="notes"
+          rows={3}
+          placeholder="e.g. Use half the chilli. Great with rice."
+          defaultValue={notes}
+          className={text}
+        />
       </Field>
 
       {state?.error && (

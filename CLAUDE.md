@@ -8,7 +8,7 @@
 - **Descriptive branch names.** Name branches after the milestone or feature (e.g. `milestone-2-url-import`, `fix-login-redirect`). If a session assigns a random branch name, work on a descriptive one instead.
 - **The risk is content, not code.** If adding a recipe is tedious, nobody will. Every decision favours making recipe entry effortless.
 - **Useful solo first.** The app must be worth using with zero friends on it.
-- **Out of scope until real users ask:** comments, notifications, feed ranking, ratings, meal plans, shopping lists, structured ingredient parsing (quantities/units), advanced search, native apps.
+- **Out of scope until real users ask:** comments, notifications, feed ranking, ratings, meal plans, shopping lists, structured ingredient parsing (quantities/units), advanced search (beyond milestone 3's name/ingredient search), native apps.
 
 ## Stack
 
@@ -22,10 +22,11 @@
 ## Data model
 
 ```
-profiles(id, display_name, avatar_url)          -- added in milestone 3; until then author_id references auth.users
+profiles(id, display_name, avatar_url)          -- added in milestone 4; until then author_id references auth.users
 recipes(id, author_id, title, description, servings text, total_time text,
-        ingredients text[], steps text[], source text, source_url, source_photos text[], created_at)
+        ingredients text[], steps text[], source text, source_url, source_photos text[], notes text, created_at)
                                                 -- source: free-text credit, e.g. "Jamie Oliver, 5 Ingredients"
+                                                -- notes: the author's private "Chef's notes"
 groups(id, name, invite_code)
 group_members(group_id, user_id)
 saves(user_id, recipe_id)
@@ -56,9 +57,10 @@ Users photograph a recipe, **usually a printed cookbook page**, and the app fill
 
 1. **Personal cookbook + photo import.** Sign in, add a recipe by photo or by hand, review/edit, view your cookbook. Start with a throwaway page that uploads a photo and shows the extracted JSON, to validate extraction on real cookbook pages before building screens.
 2. **URL import.** Paste a recipe URL and parse its schema.org `Recipe` JSON-LD into the form. YouTube links: Claude reads the recipe from the video description (counts towards the daily extraction limit); if it isn't there, try JSON-LD on the description's links. Video details come from the YouTube Data API (`YOUTUBE_API_KEY`), because YouTube blocks scraping from Vercel.
-3. **Groups.** Create a group, share an invite link, see a feed of group members' recipes.
-4. **Save.** "Save to my cookbook"; the cookbook shows your own recipes plus saved ones.
-5. **Real users.** 5–10 friends. Success metric: each adds 3+ recipes in their first week.
+3. **Search + chef's notes.** A search bar on the cookbook page that matches recipe titles and ingredients (filtered in the browser as you type). A "Chef's notes" field on each recipe for the author's own notes, shown only to the author.
+4. **Groups.** Create a group, share an invite link, see a feed of group members' recipes. Keep chef's notes private: RLS is row-level, so members can read `recipes.notes` unless it moves to its own table or is excluded by a column grant.
+5. **Save.** "Save to my cookbook"; the cookbook shows your own recipes plus saved ones.
+6. **Real users.** 5–10 friends. Success metric: each adds 3+ recipes in their first week.
    - Before inviting anyone: sign-in emails go through Resend (Supabase custom SMTP) from the test sender `onboarding@resend.dev`, which only delivers to the Resend account owner. Verify our own domain in Resend and switch the sender to it.
 
 ## Later
