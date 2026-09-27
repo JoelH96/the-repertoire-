@@ -4,7 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { PHOTO_BUCKET } from "@/lib/photos";
 import { createClient } from "@/lib/supabase/server";
 import { youTubeVideoId } from "@/lib/url-import/youtube";
-import { getRecipe } from "../data";
+import { getNotes, getRecipe } from "../data";
 import { PageHeader } from "../page-header";
 
 export default async function RecipePage({ params }: PageProps<"/recipes/[id]">) {
@@ -14,6 +14,7 @@ export default async function RecipePage({ params }: PageProps<"/recipes/[id]">)
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   const isAuthor = auth.user?.id === recipe.author_id;
+  const notes = isAuthor ? await getNotes(recipe.id) : null;
 
   // The bucket is private, so photos are shown through short-lived signed URLs.
   const { data: signed } = recipe.source_photos.length
@@ -25,7 +26,7 @@ export default async function RecipePage({ params }: PageProps<"/recipes/[id]">)
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-6">
-      <PageHeader back="/" title={recipe.title}>
+      <PageHeader back={isAuthor ? "/" : "/everyone"} title={recipe.title}>
         {isAuthor && (
           <Link href={`/recipes/${recipe.id}/edit`} className={buttonVariants({ variant: "outline" })}>
             Edit
@@ -33,8 +34,11 @@ export default async function RecipePage({ params }: PageProps<"/recipes/[id]">)
         )}
       </PageHeader>
 
-      {(recipe.source || meta || recipe.description) && (
+      {(!isAuthor || recipe.source || meta || recipe.description) && (
         <div className="flex flex-col gap-2">
+          {!isAuthor && (
+            <p className="text-sm text-muted-foreground">Shared by {recipe.author.display_name}</p>
+          )}
           {recipe.source && <p className="text-sm">From {recipe.source}</p>}
           {meta && <p className="text-sm text-muted-foreground">{meta}</p>}
           {recipe.description && <p className="whitespace-pre-line">{recipe.description}</p>}
@@ -69,8 +73,8 @@ export default async function RecipePage({ params }: PageProps<"/recipes/[id]">)
       {isAuthor && (
         <section className="flex flex-col gap-2">
           <h2 className="text-lg font-semibold">Chef&apos;s notes</h2>
-          {recipe.notes ? (
-            <p className="whitespace-pre-line">{recipe.notes}</p>
+          {notes ? (
+            <p className="whitespace-pre-line">{notes}</p>
           ) : (
             <Link href={`/recipes/${recipe.id}/edit#notes`} className="self-start text-sm text-muted-foreground underline">
               Add a note for next time

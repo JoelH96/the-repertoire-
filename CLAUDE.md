@@ -22,14 +22,12 @@
 ## Data model
 
 ```
-profiles(id, display_name, avatar_url)          -- added in milestone 4; until then author_id references auth.users
+profiles(id, display_name, avatar_url)          -- created on sign-up by a trigger on auth.users
 recipes(id, author_id, title, description, servings text, total_time text,
-        ingredients text[], steps text[], source text, source_url, source_photos text[], notes text, created_at)
+        ingredients text[], steps text[], source text, source_url, source_photos text[], created_at)
                                                 -- source: free-text credit, e.g. "Jamie Oliver, 5 Ingredients"
-                                                -- notes: the author's private "Chef's notes"
-groups(id, name, invite_code)
-group_members(group_id, user_id)
-saves(user_id, recipe_id)
+recipe_notes(recipe_id, notes)                  -- the author's private "Chef's notes"; only the author can read them
+saves(user_id, recipe_id)                       -- milestone 5
 extraction_usage(user_id, day, count)           -- photo import daily limit, via claim_extraction()
 ```
 
@@ -37,7 +35,7 @@ Schema changes go in `supabase/migrations/` as numbered SQL files.
 
 Ingredients and steps are plain text lines. Do not parse them into structured quantities.
 
-Access rule (enforced in RLS, not app code): a user can read a recipe if they wrote it, or if its author shares a group with them.
+Access rule (enforced in RLS, not app code): every signed-in user can read every recipe and its photos (one open group). Only the author can edit a recipe or read its chef's notes.
 
 ## Photo import
 
@@ -58,7 +56,7 @@ Users photograph a recipe, **usually a printed cookbook page**, and the app fill
 1. **Personal cookbook + photo import.** Sign in, add a recipe by photo or by hand, review/edit, view your cookbook. Start with a throwaway page that uploads a photo and shows the extracted JSON, to validate extraction on real cookbook pages before building screens.
 2. **URL import.** Paste a recipe URL and parse its schema.org `Recipe` JSON-LD into the form. YouTube links: Claude reads the recipe from the video description (counts towards the daily extraction limit); if it isn't there, try JSON-LD on the description's links. Video details come from the YouTube Data API (`YOUTUBE_API_KEY`), because YouTube blocks scraping from Vercel.
 3. **Search + chef's notes.** A search bar on the cookbook page that matches recipe titles and ingredients (filtered in the browser as you type). A "Chef's notes" field on each recipe for the author's own notes, shown only to the author.
-4. **Groups.** Create a group, share an invite link, see a feed of group members' recipes. Keep chef's notes private: RLS is row-level, so members can read `recipes.notes` unless it moves to its own table or is excluded by a column grant.
+4. **Profiles + sharing.** Everyone is in one open group: an "Everyone" tab shows other cooks' recipes with their name, and you set your name on your profile. Chef's notes moved to `recipe_notes` so they stay private.
 5. **Save.** "Save to my cookbook"; the cookbook shows your own recipes plus saved ones.
 6. **Real users.** 5–10 friends. Success metric: each adds 3+ recipes in their first week.
    - Before inviting anyone: sign-in emails go through Resend (Supabase custom SMTP) from the test sender `onboarding@resend.dev`, which only delivers to the Resend account owner. Verify our own domain in Resend and switch the sender to it.
@@ -67,4 +65,5 @@ Users photograph a recipe, **usually a printed cookbook page**, and the app fill
 
 Agreed but not scheduled into a milestone yet.
 
+- **Groups** (`groups(id, name, invite_code)`, `group_members(group_id, user_id)`): private groups with invite links, replacing the one open group, when there are users who don't all know each other.
 - **Google sign-in** (Supabase Auth Google provider). Sign-in is magic link only for now; Google removes the dependency on email delivery.
