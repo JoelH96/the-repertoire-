@@ -15,25 +15,58 @@ export function youTubeVideoId(url: URL): string | null {
   return id && /^[\w-]{11}$/.test(id) ? id : null;
 }
 
+// YouTube often answers servers in data centres (like Vercel's) with a "confirm you're
+// not a bot" page instead of the video, so the official Data API is used when a key is set.
+export async function fetchYouTubeVideo(id: string): Promise<YouTubeVideo> {
+  const key = process.env.YOUTUBE_API_KEY;
+  return key ? fromDataApi(id, key) : fromWatchPage(id);
+}
+
+async function fromDataApi(id: string, key: string): Promise<YouTubeVideo> {
+  const api = new URL("https://www.googleapis.com/youtube/v3/videos");
+  api.search = new URLSearchParams({ part: "snippet", id, key }).toString();
+  const res = await fetch(api, { signal: AbortSignal.timeout(10_000), cache: "no-store" });
+  const body = await res.json().catch(() => null);
+  if (!res.ok) {
+    console.error("YouTube Data API error", res.status, body?.error?.message);
+    throw new FetchPageError("Couldn't read that YouTube video");
+  }
+  const snippet = body?.items?.[0]?.snippet;
+  if (!snippet) throw new FetchPageError("Couldn't find that YouTube video. Is it private?");
+  return {
+    url: watchUrl(id),
+    title: snippet.title ?? "",
+    channel: snippet.channelTitle ?? "",
+    description: snippet.description ?? "",
+  };
+}
+
 // Reads the full description from the watch page's embedded player data. The meta
 // description tag is cut short, which usually loses the ingredients.
-export async function fetchYouTubeVideo(id: string): Promise<YouTubeVideo> {
-  const url = `https://www.youtube.com/watch?v=${id}`;
+async function fromWatchPage(id: string): Promise<YouTubeVideo> {
   // SOCS skips the cookie consent page YouTube shows to requests from Europe.
-  const { html } = await fetchPage(`${url}&hl=en`, { Cookie: "SOCS=CAI" });
+  const { html } = await fetchPage(`${watchUrl(id)}&hl=en`, { Cookie: "SOCS=CAI" });
 
   const player = embeddedJson(html, "ytInitialPlayerResponse") as {
+    playabilityStatus?: { status?: string; reason?: string };
     videoDetails?: { title?: string; author?: string; shortDescription?: string };
   } | null;
   const details = player?.videoDetails;
-  if (!details) throw new FetchPageError("Couldn't read that YouTube video");
+  if (!details) {
+    console.error("YouTube watch page had no video details", player?.playabilityStatus ?? "no player data");
+    throw new FetchPageError("YouTube wouldn't share that video with us. Try again later.");
+  }
 
   return {
-    url,
+    url: watchUrl(id),
     title: details.title ?? "",
     channel: details.author ?? "",
     description: details.shortDescription ?? "",
   };
+}
+
+function watchUrl(id: string) {
+  return `https://www.youtube.com/watch?v=${id}`;
 }
 
 // Pulls the object literal assigned to `name` in an inline script, e.g. `var x = {...};`.

@@ -56,10 +56,14 @@ export async function POST(request: NextRequest) {
     const result = videoId
       ? await fromYouTube(await fetchYouTubeVideo(videoId), () => claimExtraction(supabase))
       : await fromWebPage(url.href);
-    if (!result) return NextResponse.json({ error: NOT_FOUND }, { status: 422 });
+    if (!result) {
+      console.warn(`No recipe found at ${parsed.data.url}`);
+      return NextResponse.json({ error: NOT_FOUND }, { status: 422 });
+    }
     return NextResponse.json(result);
   } catch (err) {
     if (err instanceof FetchPageError) {
+      console.warn(`URL import failed for ${parsed.data.url}: ${err.message}`);
       return NextResponse.json({ error: err.message }, { status: 422 });
     }
     if (err instanceof ExtractionError) {

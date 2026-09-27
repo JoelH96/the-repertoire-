@@ -20,5 +20,8 @@ A social recipe-sharing web app. See `CLAUDE.md` for the product plan.
    <p>Or <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email">tap here to sign in</a>.</p>
    ```
 2. **Env vars:** copy `.env.example` to `.env.local` and fill it in. In Vercel, set the
-   same variables; mark `ANTHROPIC_API_KEY` as Sensitive.
+   same variables; mark `ANTHROPIC_API_KEY` and `YOUTUBE_API_KEY` as Sensitive.
+   For `YOUTUBE_API_KEY`: in Google Cloud Console, create a project, enable **YouTube Data API v3**,
+   then under APIs & Services → Credentials create an API key and restrict it to that API.
+   The free quota (10,000 units a day, 1 per import) is plenty.
 3. `npm install && npm run dev`
