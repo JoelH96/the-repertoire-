@@ -66,6 +66,19 @@ export default async function RecipePage({ params }: PageProps<"/recipes/[id]">)
         </section>
       )}
 
+      {isAuthor && (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-lg font-semibold">Chef&apos;s notes</h2>
+          {recipe.notes ? (
+            <p className="whitespace-pre-line">{recipe.notes}</p>
+          ) : (
+            <Link href={`/recipes/${recipe.id}/edit#notes`} className="self-start text-sm text-muted-foreground underline">
+              Add a note for next time
+            </Link>
+          )}
+        </section>
+      )}
+
       {(photoUrls.length > 0 || recipe.source_url) && (
         <section className="flex flex-col gap-2">
           <h2 className="text-lg font-semibold">Original</h2>

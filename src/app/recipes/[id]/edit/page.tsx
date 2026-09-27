@@ -28,6 +28,7 @@ export default async function EditRecipePage({ params }: PageProps<"/recipes/[id
           steps: recipe.steps,
         }}
         sourceUrl={recipe.source_url ?? undefined}
+        notes={recipe.notes ?? undefined}
         action={updateRecipe.bind(null, id)}
         submitLabel="Save changes"
       />

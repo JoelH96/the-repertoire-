@@ -2,13 +2,14 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
+import { CookbookList } from "./cookbook-list";
 
 export default async function HomePage() {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   const { data: recipes, error } = await supabase
     .from("recipes")
-    .select("id, title, source, servings, total_time")
+    .select("id, title, source, servings, total_time, ingredients")
     .eq("author_id", auth.user!.id)
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -31,20 +32,7 @@ export default async function HomePage() {
           No recipes yet. Photograph a cookbook page or paste a link to add your first.
         </p>
       ) : (
-        <ul className="flex flex-col divide-y rounded-lg border">
-          {recipes.map((recipe) => (
-            <li key={recipe.id}>
-              <Link href={`/recipes/${recipe.id}`} className="flex flex-col gap-0.5 px-4 py-3">
-                <span className="font-medium">{recipe.title}</span>
-                {(recipe.source || recipe.servings || recipe.total_time) && (
-                  <span className="text-sm text-muted-foreground">
-                    {[recipe.source, recipe.servings, recipe.total_time].filter(Boolean).join(" · ")}
-                  </span>
-                )}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <CookbookList recipes={recipes} />
       )}
     </main>
   );

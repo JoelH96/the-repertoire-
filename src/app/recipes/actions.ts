@@ -21,6 +21,7 @@ const RecipeFields = z.object({
   servings: z.string().trim().max(100),
   total_time: z.string().trim().max(100),
   source: z.string().trim().max(200),
+  notes: z.string().trim().max(5000),
   ingredients: lines,
   steps: lines,
   // One form field per photo: browsers send newlines as \r\n, so joined paths break.
@@ -38,6 +39,7 @@ function parse(formData: FormData) {
     servings: field("servings"),
     total_time: field("total_time"),
     source: field("source"),
+    notes: field("notes"),
     ingredients: field("ingredients"),
     steps: field("steps"),
     source_photos: formData.getAll("source_photos").map(String),
@@ -75,13 +77,23 @@ export async function updateRecipe(
   const parsed = parse(formData);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   // Photos are fixed once a recipe is saved, so source_photos isn't updated.
-  const { title, description, servings, total_time, source, source_url, ingredients, steps } =
+  const { title, description, servings, total_time, source, source_url, notes, ingredients, steps } =
     parsed.data;
 
   // RLS only lets authors update their own recipes; a miss comes back as no row.
   const { data, error } = await supabase
     .from("recipes")
-    .update({ title, description, servings, total_time, source, source_url, ingredients, steps })
+    .update({
+      title,
+      description,
+      servings,
+      total_time,
+      source,
+      source_url,
+      notes,
+      ingredients,
+      steps,
+    })
     .eq("id", id)
     .select("id")
     .maybeSingle();
