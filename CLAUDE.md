@@ -14,7 +14,7 @@
 
 - **Next.js** (App Router) + **TypeScript**
 - **Tailwind CSS** + **shadcn/ui**, mobile-first, installable as a PWA
-- **Supabase**: Postgres, Auth (magic link / Google), Storage (recipe photos), Row-Level Security for all access rules
+- **Supabase**: Postgres, Auth (magic link / Google; invite-only, friends are invited from the Supabase dashboard), Storage (recipe photos), Row-Level Security for all access rules
 - **Anthropic API** (`@anthropic-ai/sdk`), server-side only, for photo → recipe extraction
 - **Vercel** for hosting; deploys on push to `main`
 - Next.js 16: route protection lives in `src/proxy.ts` (the renamed `middleware`). Check `node_modules/next/dist/docs/` before relying on older Next.js patterns.

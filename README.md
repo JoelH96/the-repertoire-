@@ -19,6 +19,14 @@ A social recipe-sharing web app. See `CLAUDE.md` for the product plan.
    <p>Your code: <strong>{{ .Token }}</strong></p>
    <p>Or <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email">tap here to sign in</a>.</p>
    ```
+   Sign-up is invite-only: under Authentication → Sign In / Providers, turn off **Allow new users
+   to sign up**. To invite a friend, use Authentication → Users → Add user → Send invitation.
+   Set the **Invite user** template to link to the app:
+   ```html
+   <h2>You're invited to The Repertoire</h2>
+   <p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite">Accept the invite</a>,
+   or sign in at {{ .SiteURL }} with this email address.</p>
+   ```
 2. **Env vars:** copy `.env.example` to `.env.local` and fill it in. In Vercel, set the
    same variables; mark `ANTHROPIC_API_KEY` and `YOUTUBE_API_KEY` as Sensitive.
    For `YOUTUBE_API_KEY`: in Google Cloud Console, create a project, enable **YouTube Data API v3**,

@@ -27,7 +27,10 @@ export function LoginForm({ linkError }: { linkError: boolean }) {
       options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
     });
     setPending(false);
-    if (error) setError(error.message);
+    // Sign-up is invite-only, so Supabase refuses codes for emails it doesn't know.
+    if (error && (error.code === "otp_disabled" || /signups not allowed/i.test(error.message)))
+      setError("That email hasn't been invited yet. Ask Joel for an invite.");
+    else if (error) setError(error.message);
     else setStep("code");
   }
 
