@@ -12,6 +12,7 @@ export type CookbookRecipe = {
   servings: string | null;
   total_time: string | null;
   ingredients: string[];
+  author?: string; // set on other cooks' recipes
 };
 
 // Lowercase and strip accents, so "creme" finds "crème".
@@ -19,9 +20,9 @@ function normalize(s: string) {
   return s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 }
 
-// Every word in the query must appear in the title or an ingredient.
+// Every word in the query must appear in the title, an ingredient, or the cook's name.
 function matches(recipe: CookbookRecipe, words: string[]) {
-  const haystack = normalize([recipe.title, ...recipe.ingredients].join("\n"));
+  const haystack = normalize([recipe.title, recipe.author ?? "", ...recipe.ingredients].join("\n"));
   return words.every((word) => haystack.includes(word));
 }
 
@@ -52,9 +53,11 @@ export function CookbookList({ recipes }: { recipes: CookbookRecipe[] }) {
             <li key={recipe.id}>
               <Link href={`/recipes/${recipe.id}`} className="flex flex-col gap-0.5 px-4 py-3">
                 <span className="font-medium">{recipe.title}</span>
-                {(recipe.source || recipe.servings || recipe.total_time) && (
+                {(recipe.author || recipe.source || recipe.servings || recipe.total_time) && (
                   <span className="text-sm text-muted-foreground">
-                    {[recipe.source, recipe.servings, recipe.total_time].filter(Boolean).join(" · ")}
+                    {[recipe.author, recipe.source, recipe.servings, recipe.total_time]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </span>
                 )}
               </Link>

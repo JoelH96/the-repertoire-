@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateRecipe } from "../../actions";
-import { getRecipe } from "../../data";
+import { getNotes, getRecipe } from "../../data";
 import { PageHeader } from "../../page-header";
 import { RecipeForm } from "../../recipe-form";
 import { DeleteRecipeButton } from "./delete-button";
@@ -13,6 +13,7 @@ export default async function EditRecipePage({ params }: PageProps<"/recipes/[id
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (auth.user?.id !== recipe.author_id) notFound();
+  const notes = await getNotes(id);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-6">
@@ -28,7 +29,7 @@ export default async function EditRecipePage({ params }: PageProps<"/recipes/[id
           steps: recipe.steps,
         }}
         sourceUrl={recipe.source_url ?? undefined}
-        notes={recipe.notes ?? undefined}
+        notes={notes ?? undefined}
         action={updateRecipe.bind(null, id)}
         submitLabel="Save changes"
       />

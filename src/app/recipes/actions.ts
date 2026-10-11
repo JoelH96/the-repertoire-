@@ -7,6 +7,18 @@ import { createClient } from "@/lib/supabase/server";
 
 export type SaveState = { error: string } | null;
 
+// Notes are private to the author, so they're kept apart from the (shared) recipe row.
+async function saveNotes(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  recipeId: string,
+  notes: string,
+) {
+  const { error } = notes
+    ? await supabase.from("recipe_notes").upsert({ recipe_id: recipeId, notes })
+    : await supabase.from("recipe_notes").delete().eq("recipe_id", recipeId);
+  return error;
+}
+
 // Ingredients and steps are edited as one line each; blank lines are dropped.
 const lines = z.string().transform((s) =>
   s
@@ -59,8 +71,11 @@ export async function createRecipe(_prev: SaveState, formData: FormData): Promis
     return { error: "Invalid photo" };
   }
 
-  const { data, error } = await supabase.from("recipes").insert(parsed.data).select("id").single();
+  const { notes, ...recipe } = parsed.data;
+  const { data, error } = await supabase.from("recipes").insert(recipe).select("id").single();
   if (error) return { error: `Couldn't save: ${error.message}` };
+  const notesError = await saveNotes(supabase, data.id, notes);
+  if (notesError) return { error: `Saved the recipe, but not your notes: ${notesError.message}` };
 
   redirect(`/recipes/${data.id}`);
 }
@@ -90,7 +105,6 @@ export async function updateRecipe(
       total_time,
       source,
       source_url,
-      notes,
       ingredients,
       steps,
     })
@@ -99,6 +113,8 @@ export async function updateRecipe(
     .maybeSingle();
   if (error) return { error: `Couldn't save: ${error.message}` };
   if (!data) return { error: "Recipe not found" };
+  const notesError = await saveNotes(supabase, id, notes);
+  if (notesError) return { error: `Couldn't save your notes: ${notesError.message}` };
 
   redirect(`/recipes/${id}`);
 }
@@ -109,6 +125,7 @@ export async function deleteRecipe(id: string): Promise<SaveState> {
   if (!auth.user) return { error: "You're signed out. Sign in again to delete." };
 
   // RLS only lets authors delete their own recipes; a miss comes back as no row.
+  // Notes go with the recipe (on delete cascade).
   const { data, error } = await supabase
     .from("recipes")
     .delete()
